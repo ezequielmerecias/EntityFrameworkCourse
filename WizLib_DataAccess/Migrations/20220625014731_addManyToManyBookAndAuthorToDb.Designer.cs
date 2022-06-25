@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WizLib_DataAccess;
 
@@ -11,9 +12,11 @@ using WizLib_DataAccess;
 namespace WizLib_DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220625014731_addManyToManyBookAndAuthorToDb")]
+    partial class addManyToManyBookAndAuthorToDb
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -213,9 +216,12 @@ namespace WizLib_DataAccess.Migrations
                     b.Property<int>("Book_Id")
                         .HasColumnType("int");
 
+                    b.Property<int>("Fluent_AuthorAuthor_Id")
+                        .HasColumnType("int");
+
                     b.HasKey("Author_Id", "Book_Id");
 
-                    b.HasIndex("Book_Id");
+                    b.HasIndex("Fluent_AuthorAuthor_Id");
 
                     b.ToTable("Fluent_BookAuthor");
                 });
@@ -361,15 +367,15 @@ namespace WizLib_DataAccess.Migrations
 
             modelBuilder.Entity("WizLib_Model.Models.Fluent_BookAuthor", b =>
                 {
-                    b.HasOne("WizLib_Model.Models.Fluent_Author", "Fluent_Author")
+                    b.HasOne("WizLib_Model.Models.Fluent_Book", "Fluent_Book")
                         .WithMany("Fluent_BookAuthors")
                         .HasForeignKey("Author_Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("WizLib_Model.Models.Fluent_Book", "Fluent_Book")
-                        .WithMany("Fluent_BookAuthors")
-                        .HasForeignKey("Book_Id")
+                    b.HasOne("WizLib_Model.Models.Fluent_Author", "Fluent_Author")
+                        .WithMany()
+                        .HasForeignKey("Fluent_AuthorAuthor_Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -392,11 +398,6 @@ namespace WizLib_DataAccess.Migrations
                 {
                     b.Navigation("Book")
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("WizLib_Model.Models.Fluent_Author", b =>
-                {
-                    b.Navigation("Fluent_BookAuthors");
                 });
 
             modelBuilder.Entity("WizLib_Model.Models.Fluent_Book", b =>
