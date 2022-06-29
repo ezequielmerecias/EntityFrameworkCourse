@@ -222,27 +222,48 @@ namespace WizLib.Controllers
 
             //var bookCount2 = _db.Books.Count();
 
-            IEnumerable<Book> BookList1 = _db.Books;
-            var FilteredBook1 = BookList1.Where(q => q.Price > 500).ToList();
+            //IEnumerable<Book> BookList1 = _db.Books;
+            //var FilteredBook1 = BookList1.Where(q => q.Price > 500).ToList();
 
-            IQueryable<Book> BookList2 = _db.Books;
-            var filteredBook2 = BookList2.Where(q => q.Price > 500).ToList();
+            //IQueryable<Book> BookList2 = _db.Books;
+            //var filteredBook2 = BookList2.Where(q => q.Price > 500).ToList();
 
-            var Category = _db.Categories.FirstOrDefault();
-            _db.Entry(Category).State = EntityState.Modified;
-            _db.SaveChanges();
+            //var Category = _db.Categories.FirstOrDefault();
+            //_db.Entry(Category).State = EntityState.Modified;
+            //_db.SaveChanges();
 
-            //Updating Related Data
-            var bookTemp1 = _db.Books.Include(q => q.BookDetail).FirstOrDefault(q => q.Book_Id == 3);
-            bookTemp1.BookDetail.NumberOfChapters = 2222;
-            _db.Books.Update(bookTemp1);
-            _db.SaveChanges();
+            ////Updating Related Data
+            //var bookTemp1 = _db.Books.Include(q => q.BookDetail).FirstOrDefault(q => q.Book_Id == 3);
+            //bookTemp1.BookDetail.NumberOfChapters = 2222;
+            //_db.Books.Update(bookTemp1);
+            //_db.SaveChanges();
 
-            //Más eficiente usar Attach para no actualizar los padres en entidades derivadas
-            var bookTemp2 = _db.Books.Include(q => q.BookDetail).FirstOrDefault(q => q.Book_Id == 3);
-            bookTemp2.BookDetail.Weight = 3333;
-            _db.Books.Attach(bookTemp2);
-            _db.SaveChanges();
+            ////Más eficiente usar Attach para no actualizar los padres en entidades derivadas
+            //var bookTemp2 = _db.Books.Include(q => q.BookDetail).FirstOrDefault(q => q.Book_Id == 3);
+            //bookTemp2.BookDetail.Weight = 3333;
+            //_db.Books.Attach(bookTemp2);
+            //_db.SaveChanges();
+
+            //VIEWS
+            var viewList = _db.BookDetailsFromViews.ToList();
+            var viewList1 = _db.BookDetailsFromViews.FirstOrDefault();
+            var viewList2 = _db.BookDetailsFromViews.Where(q => q.Price > 500);
+
+            //RAW SQL
+
+            var bookRaw = _db.Books.FromSqlRaw("SELECT * FROM dbo.Books").ToList();
+
+            //SQL Injection Attack Prone
+            int id = 1;
+            var bookTemp = _db.Books.FromSqlInterpolated($"SELECT * FROM dbo.Books Where Book_Id={id}").ToList();
+
+            var booksSproc = _db.Books.FromSqlInterpolated($"EXEC dbo.getAllBookDetails {id}").ToList();
+
+            //.NET 5 superior
+            var bookFilter1 = _db.Books.Include(e => e.BookAuthors.Where(q => q.Author_Id == 1)).ToList();
+            var bookFilter2 = _db.Books.Include(e => e.BookAuthors.OrderByDescending(q => q.Author_Id).Take(1)).ToList();
+
+
 
             return RedirectToAction(nameof(Index));
         }

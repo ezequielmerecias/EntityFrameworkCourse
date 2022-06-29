@@ -15,7 +15,7 @@ namespace WizLib_DataAccess
         {
 
         }
-
+        public DbSet<BookDetailsFromView> BookDetailsFromViews { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Genre> Genres { get; set; }
         public DbSet<Book> Books { get; set; }
@@ -47,7 +47,7 @@ namespace WizLib_DataAccess
             modelBuilder.ApplyConfiguration(new FluentPublisherConfig());
             modelBuilder.ApplyConfiguration(new FluentAuthorConfig());
 
-
+            modelBuilder.Entity<BookDetailsFromView>().HasNoKey().ToView("GetOnlyBookDetails");
 
         }
 
