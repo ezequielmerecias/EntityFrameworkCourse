@@ -20,7 +20,8 @@ namespace WizLib.Controllers
         public IActionResult Index()
         {
             //Eager Loading 
-            List<Book> objList = _db.Books.Include(q => q.Publisher).ToList();
+            //List<Book> objList = _db.Books.Include(q => q.Publisher).ToList();
+
             //List<Book> objList = _db.Books.ToList();
             //foreach(var obj in objList)
             //{
@@ -30,6 +31,25 @@ namespace WizLib.Controllers
             //    //Explicit loading More efficient
             //    _db.Entry(obj).Reference(q => q.Publisher).Load();
             //}
+
+            //List<Book> objList = _db.Books.ToList();
+            //foreach (var obj in objList)
+            //{
+            //    //Explicit loading More efficient
+            //    _db.Entry(obj).Reference(q => q.Publisher).Load();
+            //    _db.Entry(obj).Collection(q => q.BookAuthors).Load();
+            //    foreach(var bookAuth in obj.BookAuthors)
+            //    {
+            //        _db.Entry(bookAuth).Reference(q => q.Author).Load();
+            //    }
+            //}
+
+            //Eager Loading, simplifica lo de arriba
+            List<Book> objList = _db.Books.Include(q => q.Publisher)
+                                            .Include(q => q.BookAuthors)
+                                            .ThenInclude(q => q.Author).ToList();
+
+
             return View(objList);
         }
 
@@ -80,6 +100,56 @@ namespace WizLib.Controllers
             _db.SaveChanges();
 
             return RedirectToAction(nameof(Index));
+        }
+
+        public IActionResult ManageAuthors(int id)
+        {
+            BookAuthorVM obj = new BookAuthorVM
+            {
+                BookAuthorList = _db.BookAuthors.Include(q => q.Author).Include(q => q.Book)
+                                .Where(q => q.Book_Id == id).ToList(),
+                BookAuthor = new BookAuthor()
+                {
+                    Book_Id = id
+                },
+                Book = _db.Books.FirstOrDefault(q => q.Book_Id == id)
+            };
+            List<int> tempListOfAssignedAuthor = obj.BookAuthorList.Select(q => q.Author_Id).ToList();
+
+            //NOT IN Clause in LINQ
+            //get all the author whos id is not in tempListOfAssignedAuthor
+            var tempList = _db.Authors.Where(q => !tempListOfAssignedAuthor.Contains(q.Author_Id)).ToList();
+
+            obj.AuthorList = tempList.Select(q => new SelectListItem
+            {
+                Text = q.FullName,
+                Value = q.Author_Id.ToString()
+            });
+
+            return View(obj);
+        }
+
+        [HttpPost]
+        public IActionResult ManageAuthors(BookAuthorVM bookAuthorVM)
+        {
+            if(bookAuthorVM.BookAuthor.Book_Id != 0 && bookAuthorVM.BookAuthor.Author_Id != 0)
+            {
+                _db.BookAuthors.Add(bookAuthorVM.BookAuthor);
+                _db.SaveChanges();
+            }
+            return RedirectToAction(nameof(ManageAuthors), new { @id = bookAuthorVM.BookAuthor.Book_Id });
+        }
+
+        [HttpPost]
+        public IActionResult RemoveAuthors(int authorId, BookAuthorVM bookAuthorVM)
+        {
+            int bookId = bookAuthorVM.Book.Book_Id;
+            BookAuthor bookAuthor = _db.BookAuthors
+                .FirstOrDefault(q => q.Author_Id == authorId && q.Book_Id == bookId);
+
+            _db.BookAuthors.Remove(bookAuthor);
+            _db.SaveChanges();
+            return RedirectToAction(nameof(ManageAuthors), new { @id = bookId });
         }
 
         public IActionResult Details(int? id)
